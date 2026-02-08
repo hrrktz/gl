@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Was würden die Menschen sagen?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sowi Analyse: Der Streik</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -18,173 +18,224 @@
             flex-direction: column; 
             align-items: center; 
             background: var(--bg-color);
-            touch-action: manipulation; /* Verbessert Reaktionszeit auf Tablets */
         }
 
         header {
             width: 100%;
             background: var(--primary-color);
             color: white;
-            padding: 1rem;
+            padding: 1rem 0;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         .controls { 
-            margin: 20px; 
+            margin: 15px; 
             display: flex; 
             gap: 10px; 
-            flex-wrap: wrap;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         button { 
-            padding: 12px 24px; 
+            padding: 12px 20px; 
             font-size: 16px;
             cursor: pointer; 
             background: white; 
-            color: var(--primary-color); 
             border: 2px solid var(--primary-color); 
             border-radius: 8px; 
             font-weight: bold;
-            transition: 0.2s;
         }
 
-        button:active { transform: scale(0.95); }
-
-        button.primary {
-            background: var(--primary-color);
-            color: white;
-        }
+        button.primary { background: var(--primary-color); color: white; }
+        button.download { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
         #canvas-container { 
             position: relative; 
-            border: 2px solid #ccc; 
+            border: 2px solid #333; 
             background: #fff; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: fit-content;
             max-width: 95vw;
-            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
         #bgImage { 
             display: block; 
             max-width: 100%; 
             height: auto; 
-            pointer-events: none; /* Verhindert, dass das Bild markiert wird */
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .image-credits {
+            padding: 8px;
+            font-size: 0.75em;
+            color: #555;
+            background: white;
+            text-align: right;
+            border-top: 1px solid #eee;
         }
 
         .bubble { 
             position: absolute; 
             cursor: move; 
-            padding: 12px 18px; 
+            padding: 10px 15px; 
             background: white; 
             border: 2px solid black; 
-            border-radius: 25px; 
-            min-width: 100px; 
-            max-width: 250px;
-            font-size: 16px;
-            line-height: 1.4;
+            border-radius: 15px; 
+            min-width: 60px; 
+            max-width: 200px;
+            font-size: 14px;
             z-index: 100;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
             outline: none;
+            text-align: center;
+            word-wrap: break-word;
+            touch-action: none; 
         }
 
-        /* Der Sprechblasen-Pfeil */
         .bubble::after { 
             content: ''; 
             position: absolute; 
-            bottom: -15px; 
-            left: 30px; 
-            border-width: 15px 15px 0; 
+            bottom: -10px; 
+            left: 15px; 
+            border-width: 10px 10px 0; 
             border-style: solid; 
             border-color: black transparent; 
         }
 
-        .bubble:focus { border-color: var(--accent-color); }
+        .trash-zone {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            text-align: center;
+            line-height: 60px;
+            font-weight: bold;
+            z-index: 200;
+            display: none;
+        }
 
         .hint { 
-            margin-top: 20px; 
+            margin: 15px; 
             font-size: 0.9em; 
-            color: #7f8c8d; 
-            max-width: 80%;
+            color: #34495e; 
             text-align: center;
+            background: #d1d8e0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 90%;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Was würden die Menschen sagen?</h1>
-    </header>
+    <header><h1>Lass die Menschen von damals sprechen!</h1></header>
     
     <div class="controls">
         <button class="primary" onclick="addBubble()">+ Sprechblase</button>
-        <button onclick="window.print()">Ergebnis speichern (PDF)</button>
-    </div>
+        </div>
 
     <div id="canvas-container">
-        <img id="bgImage" src="https://upload.wikimedia.org/wikipedia/commons/1/17/%22Der_Streik%22_von_Robert_Koehler.jpg" alt="Analysebild">
+        <img id="bgImage" crossorigin="anonymous" src="https://upload.wikimedia.org/wikipedia/commons/1/17/%22Der_Streik%22_von_Robert_Koehler.jpg" alt="Der Streik">
+        <div class="image-credits">
+            Robert Koehler: <i>Der Streik</i> (1886) | Quelle: Wikimedia Commons / DHM
+        </div>
     </div>
 
+    <div id="trash" class="trash-zone">ZUM LÖSCHEN HIER LOSLASSEN</div>
+
     <p class="hint">
-        <b>Bedienung:</b> Blasen ziehen zum Bewegen | Tippen zum Schreiben | Doppeltippen zum Löschen. <br>
-        <i>Wichtig: Am iPad für Text-Eingabe erst die Blase positionieren, dann tippen.</i>
+        <b>Anleitung:</b> Sprechblase ziehen zum Bewegen. Tippen zum Schreiben. <br>
+        <b>Löschen:</b> Blase ganz nach unten auf den roten Balken ziehen.
     </p>
 
     <script>
         const container = document.getElementById('canvas-container');
+        const bgImage = document.getElementById('bgImage');
+        const trash = document.getElementById('trash');
 
         function addBubble() {
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             bubble.contentEditable = true;
-            bubble.innerText = 'Hier Text...';
+            bubble.innerText = 'Text...';
             bubble.style.left = '20px';
             bubble.style.top = '20px';
 
             const startMove = (e) => {
-                // Wenn wir schon im Text-Edit-Modus sind, nicht verschieben
-                if (document.activeElement === bubble) return;
-
-                const isTouch = e.type === 'touchstart';
+                if (document.activeElement === bubble && e.target === bubble) return;
+                trash.style.display = 'block';
+                const isTouch = e.type.includes('touch');
                 const clientX = isTouch ? e.touches[0].clientX : e.clientX;
                 const clientY = isTouch ? e.touches[0].clientY : e.clientY;
-
                 const rect = bubble.getBoundingClientRect();
                 const shiftX = clientX - rect.left;
                 const shiftY = clientY - rect.top;
 
-                const onMove = (event) => {
-                    // Verhindert Scrollen beim Ziehen am iPad
-                    if (event.cancelable) event.preventDefault();
-
-                    const moveX = isTouch ? event.touches[0].clientX : event.clientX;
-                    const moveY = isTouch ? event.touches[0].clientY : event.clientY;
-
-                    const containerRect = container.getBoundingClientRect();
-                    
-                    bubble.style.left = (moveX - containerRect.left - shiftX) + 'px';
-                    bubble.style.top = (moveY - containerRect.top - shiftY) + 'px';
+                const onMove = (evt) => {
+                    if (evt.cancelable) evt.preventDefault();
+                    const mX = isTouch ? evt.touches[0].clientX : evt.clientX;
+                    const mY = isTouch ? evt.touches[0].clientY : evt.clientY;
+                    const cRect = container.getBoundingClientRect();
+                    bubble.style.left = (mX - cRect.left - shiftX) + 'px';
+                    bubble.style.top = (mY - cRect.top - shiftY) + 'px';
+                    bubble.style.opacity = (mY > window.innerHeight - 70) ? '0.3' : '1';
                 };
 
-                const stopMove = () => {
+                const stopMove = (evt) => {
+                    const finalY = isTouch ? evt.changedTouches[0].clientY : evt.clientY;
+                    if (finalY > window.innerHeight - 70) bubble.remove();
+                    trash.style.display = 'none';
                     document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
                     document.removeEventListener(isTouch ? 'touchend' : 'mouseup', stopMove);
                 };
-
                 document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: false });
                 document.addEventListener(isTouch ? 'touchend' : 'mouseup', stopMove);
             };
-
             bubble.addEventListener('mousedown', startMove);
             bubble.addEventListener('touchstart', startMove, { passive: false });
-
-            // Löschen bei Doppelklick / Doppeltippen
-            bubble.addEventListener('dblclick', () => {
-                if(confirm('Sprechblase wirklich löschen?')) bubble.remove();
-            });
-
             container.appendChild(bubble);
+        }
+
+        function downloadImage() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = bgImage.naturalWidth;
+            canvas.height = bgImage.naturalHeight;
+            
+            ctx.drawImage(bgImage, 0, 0);
+            const scale = bgImage.naturalWidth / bgImage.clientWidth;
+            const bubbles = document.querySelectorAll('.bubble');
+
+            bubbles.forEach(b => {
+                const bRect = b.getBoundingClientRect();
+                const cRect = container.getBoundingClientRect();
+                const x = (bRect.left - cRect.left) * scale;
+                const y = (bRect.top - cRect.top) * scale;
+                const w = bRect.width * scale;
+                const h = bRect.height * scale;
+                
+                ctx.fillStyle = "white";
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2 * scale;
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 15 * scale);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "black";
+                ctx.font = `bold ${14 * scale}px Arial`;
+                ctx.textAlign = "center";
+                ctx.fillText(b.innerText, x + w/2, y + h/2 + (5 * scale));
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'streik-analyse.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.click();
         }
     </script>
 </body>
